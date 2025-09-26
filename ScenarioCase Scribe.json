@@ -1,0 +1,370 @@
+{
+  "name": "ScenarioCase Scribe",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json[\"body\"][\"mode\"] || \"\" }}",
+              "value2": "Text"
+            }
+          ]
+        }
+      },
+      "name": "If input Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        208
+      ],
+      "id": "0663650c-1622-4232-804f-26aa994026ae"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4o-mini",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "Role & Purpose:   You are a Gherkin Scenario Expander and Test Case Generator. Your role is to take either    (a) short, high-level Gherkin scenarios or    (b) raw business requirements    and expand them into detailed Gherkin scenarios and structured test cases.    You exist to help QA teams, developers, and business analysts transform requirements into    executable BDD scenarios and comprehensive test coverage.  Capabilities:   - Expand minimal Gherkin outlines into fully detailed, step-by-step scenarios.   - Generate Gherkin scenarios directly from plain-text requirements.   - Ensure correct Gherkin syntax with Given/When/Then structure.   - Suggest positive, negative, and edge case scenarios for coverage completeness.   - Classify scenarios into execution categories: `@smoke`, `@sanity`, and `@regression`.   - Allow dual-tagging, e.g. `@smoke @positive` or `@regression @negative @edge`.   - Convert Gherkin scenarios into structured test cases with columns      (Test Case ID, Test Case Name, Precondition, Steps, Expected Result).   - Preserve original business intent while improving clarity and completeness.  Interaction Style:   - Use precise, professional, and test-oriented language.   - Always format Gherkin outputs in valid syntax.   - Always provide dual tagging (coverage type + execution type).   - Present test cases in a clear table format with columns      (Test Case ID, Test Case Name, Precondition, Steps, Expected Result).   - Maintain consistency with BDD best practices and QA standards.   - By default: output **Scenarios first, Test Cases second**.      If the user asks for only one, provide only that."
+            },
+            {
+              "content": "={{ $json[\"body\"][\"requirementText\"] }}\n"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "159b23d8-87b8-4f4f-8771-73d31319158b",
+      "name": "OpenAI Expander (Text)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "MJOFE5WmKAfPFvpD",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"gherkinScenarios\": {{ $json.gherkinScenarios }},\n  \"testCasesTable\": {{ $json.testCasesTable }}\n}",
+        "options": {}
+      },
+      "name": "Respond Webhook (Text)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "cb7b3fb6-3958-4040-a4a4-cc91f6a1c601"
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "csvFile",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "name": "Spreadsheet File (Parse CSV)",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 1,
+      "position": [
+        208,
+        352
+      ],
+      "id": "791ea424-bb05-44b9-8568-ee710e9e699b"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "Split in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        512,
+        352
+      ],
+      "id": "6b23b903-9aa7-49bd-8dd6-c9b036754ca1"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4o-mini",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "Role & Purpose: You are a Gherkin Scenario Expander and Test Case Generator. Your role is to take either:  (a) short, high-level Gherkin scenarios or  (b) raw business requirements and expand them into detailed Gherkin scenarios and structured test cases.  Capabilities: - Expand minimal Gherkin outlines into fully detailed, step-by-step scenarios. - Generate Gherkin scenarios directly from plain-text requirements. - Ensure correct Gherkin syntax with Given/When/Then structure. - Classify scenarios into execution categories: @smoke, @sanity, @regression. - Add coverage tags: @positive, @negative, @edge. - Allow dual tagging, e.g. @smoke @positive or @regression @negative @edge. - Convert Gherkin scenarios into structured test cases with columns   (Test Case ID, Test Case Name, Precondition, Steps, Expected Result). - Preserve original business intent while improving clarity and completeness.  Output Format (MANDATORY): 1. Start with:    ### Gherkin Scenarios    (list scenarios here in valid Gherkin syntax, always dual-tagged)  2. Then:    ### Test Cases    Provide a strict Markdown table with exactly these columns:    | Test Case ID | Test Case Name | Precondition | Steps | Expected Result |     - Each test case = one row.    - Steps must be separated by `<br>` for multi-step actions.    - Do not output free text outside of these two sections."
+            },
+            {
+              "content": "=Requirement ID: {{$json[\"RequirementID\"]}}\nRequirement Text: {{$json[\"RequirementText\"]}}\n"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "5d94132f-1640-4f60-bbc6-76ed683dc233",
+      "name": "OpenAI Expander (CSV)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        704,
+        208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "MJOFE5WmKAfPFvpD",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        912,
+        352
+      ],
+      "id": "7e168a50-0690-493a-91e8-4bc7153ffa1b"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Function Node: Split into Gherkin + Test Cases (CSV + HTML) cleanly\nconst src = items.find(i => i.json.formattedOutput || (i.json.message && i.json.message.content));\nconst output = src?.json.formattedOutput || src?.json.message?.content || \"\";\n\nif (!output || !output.trim()) return [];\n\n// Split gherkin and test cases\nconst parts = output.split(/#{1,}\\s*Test\\s*Cases/i);\nlet gherkinPart = (parts[0] || \"\").trim();\nlet testCasePart = (parts[1] || \"\").trim();\n\n// ✅ Clean gherkin: remove ```gherkin, ``` and ### Gherkin Scenarios\ngherkinPart = gherkinPart\n  .replace(/```gherkin/g, \"\")\n  .replace(/```/g, \"\")\n  .replace(/#{1,3}\\s*Gherkin Scenarios/i, \"\")\n  .trim();\n\n// ✅ Clean testCasePart: remove bold markers and redundant markdown tables\ntestCasePart = testCasePart\n  .replace(/\\*\\*Test\\s*Cases?:\\*\\*/gi, \"\")\n  .replace(/^#+\\s*Test\\s*Cases/i, \"\")\n  .trim();\n\n// Extract markdown table rows for test cases\nconst lines = testCasePart.split(/\\r?\\n/);\nconst tableLines = lines\n  .map(l => l.trim())\n  .filter(l => l.startsWith(\"|\") && l.includes(\"|\") && !/^\\|\\s*-+\\s*\\|/.test(l));\n\nlet testCases = [];\nlet testCasesHtml = \"\";\n\nif (tableLines.length > 1) {\n  // Parse headers\n  const rawHeaders = tableLines.shift().split(\"|\").map(h => h.trim()).filter(Boolean);\n  const normalize = (h) => {\n    const s = h.toLowerCase().replace(/\\s+/g, \"\");\n    if (s.includes(\"id\")) return \"TestCaseID\";\n    if (s.includes(\"name\")) return \"TestCaseName\";\n    if (s.includes(\"precond\")) return \"Precondition\";\n    if (s.includes(\"step\")) return \"Steps\";\n    if (s.includes(\"expect\")) return \"ExpectedResult\";\n    return h || \"Column\";\n  };\n  const headers = rawHeaders.map(normalize);\n\n  // Parse rows\n  testCases = tableLines.map((line) => {\n    const cells = line.split(\"|\").slice(1, -1).map(c => c.trim());\n    const obj = {};\n    headers.forEach((key, i) => {\n      let val = cells[i] || \"\";\n\n      if (key === \"Steps\") {\n        // ✅ Strip duplicate numbers & re-number\n        const parts = val\n          .split(/<br\\s*\\/?>|\\n/)\n          .map(s => s.replace(/^\\s*[\\d]+[\\.\\)\\-]?\\s*/, \"\").trim())\n          .filter(Boolean);\n\n        val = parts.map((s, stepIdx) => `${stepIdx + 1}. ${s}`).join(\"\\n\");\n      } else {\n        val = val\n          .split(/<br\\s*\\/?>|\\n/gi)\n          .map(s => s.trim())\n          .filter(Boolean)\n          .join(\"\\n\");\n      }\n      obj[key] = val;\n    });\n    return obj;\n  });\n\n  // ✅ Build neat HTML table for Text flow\n  const headerRow = `<tr>${rawHeaders.map(c => `<th>${c}</th>`).join(\"\")}</tr>`;\n  const bodyRows = testCases.map(tc =>\n    `<tr>${headers.map(h => `<td>${tc[h] || \"\"}</td>`).join(\"\")}</tr>`\n  ).join(\"\\n\");\n\n  testCasesHtml = `\n    <h3><b>Test Cases</b></h3>\n    <table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" \n           style=\"border-collapse: collapse; width: 100%; margin-top: 10px;\">\n      <thead>${headerRow}</thead>\n      <tbody>${bodyRows}</tbody>\n    </table>\n  `;\n}\n\n// Build plain text Gherkin file\nconst gherkinText = gherkinPart.trim();\n\n// Build CSV for test cases\nlet testcaseCsv = \"\";\nif (testCases.length > 0) {\n  const headers = Object.keys(testCases[0]);\n  testcaseCsv = headers.join(\",\") + \"\\n\";\n  testcaseCsv += testCases.map(tc =>\n    headers.map(h => `\"${(tc[h] || \"\").replace(/\"/g, '\"\"')}\"`).join(\",\")\n  ).join(\"\\n\");\n}\n\n// ✅ Return both CSV (for downloads) and HTML (for UI display)\nreturn [\n  {\n    json: {\n      gherkinScenarios: JSON.stringify(gherkinText),\n      testCasesTable: JSON.stringify(testCasesHtml || \"\"),\n      filenames: [\"gherkin.feature\", \"testcases.csv\"]\n    },\n    binary: {\n      gherkinFile: {\n        data: Buffer.from(gherkinText, \"utf8\").toString(\"base64\"),\n        mimeType: \"text/plain\",\n        fileName: \"gherkin.feature\"\n      },\n      testcaseFile: {\n        data: Buffer.from(testcaseCsv, \"utf8\").toString(\"base64\"),\n        mimeType: \"text/csv\",\n        fileName: \"testcases.csv\"\n      }\n    }\n  }\n];\n"
+      },
+      "name": "Generate Summary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        352
+      ],
+      "id": "776ccae1-dac4-4f9a-b1bc-aa26d8b94899"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Disposition",
+                "value": "attachment; filename=\"scenarios_bundle.zip\""
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/zip"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Respond Webhook (CSV)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        352
+      ],
+      "id": "e27bf4d6-868e-4650-b70e-a3d625bc8b3f"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Function Node Code (Text Flow - improved with sanitizer + HTML formatting)\nconst output = $json.formattedOutput || $json.message?.content || \"\";\n\n// Split into two sections (gherkin + test cases)\nconst parts = output.split(/(?:#{1,3}\\s*Test\\s*Cases|[*_]{0,2}\\s*Test\\s*Cases[:]*\\s*[*_]*)/i);\nconst gherkinPartRaw = parts[0] || \"\";\nconst testCasePart = parts[1] || \"\";\n\n// --- Clean gherkin part\nlet gherkinPart = gherkinPartRaw\n  .replace(/```gherkin\\s*/gi, \"\")\n  .replace(/```/g, \"\")\n  .replace(/#{1,3}\\s*Gherkin Scenarios/gi, \"\")\n  .trim();\n\n// --- Extract markdown table rows\nconst lines = testCasePart.split(/\\r?\\n/);\nlet tableLines = lines\n  .map(l => l.trim())\n  .filter(l => l.startsWith(\"|\") && l.includes(\"|\") && !/^\\|[-=]+\\|?/.test(l)); \n\nlet testCases = [];\nlet testCasesHtml = \"\";\n\n// If markdown table is found → parse it\nif (tableLines.length > 1) {\n  // Parse headers\n  const rawHeaders = tableLines.shift().split(\"|\").map(h => h.trim()).filter(Boolean);\n  const normalize = (h) => {\n    const s = h.toLowerCase().replace(/\\s+/g, \"\");\n    if (s.includes(\"id\")) return \"TestCaseID\";\n    if (s.includes(\"name\")) return \"TestCaseName\";\n    if (s.includes(\"precond\")) return \"Precondition\";\n    if (s.includes(\"step\")) return \"Steps\";\n    if (s.includes(\"expect\")) return \"ExpectedResult\";\n    return h || \"Column\";\n  };\n  const headers = rawHeaders.map(normalize);\n\n  // Parse rows\n  testCases = tableLines.map(line => {\n    const cells = line.split(\"|\").map(c => c.trim()).filter(Boolean);\n    const obj = {};\n    headers.forEach((key, i) => {\n      let val = cells[i] || \"\";\n      if (key === \"Steps\") {\n        const parts = val\n          .split(/<br\\s*\\/?>|\\n|(?=\\d+\\.)/)\n          .map(s => s.replace(/^\\s*[\\d]+[\\.\\)\\-]?\\s*/, \"\").trim())\n          .filter(Boolean);\n        val = parts.map((s, stepIdx) => `${stepIdx + 1}. ${s}`).join(\"\\n\");\n      }\n      obj[key] = val;\n    });\n    return obj;\n  });\n\n  // Build neat HTML table\n  const headerRow = `<tr>${rawHeaders.map(c => `<th>${c}</th>`).join(\"\")}</tr>`;\n  const bodyRows = testCases.map(tc =>\n    `<tr>${headers.map(h => `<td>${tc[h] || \"\"}</td>`).join(\"\")}</tr>`\n  ).join(\"\\n\");\n\n  testCasesHtml = `\n    \n    <table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" \n           style=\"border-collapse: collapse; width: 100%; margin-top: 10px;\">\n      <thead>${headerRow}</thead>\n      <tbody>${bodyRows}</tbody>\n    </table>\n  `;\n}\n\n// --- Sanitizer Fallback (if no markdown table was found)\nif (!testCasesHtml) {\n  const regex = /(TC\\d+)\\s*[\\-:|]?\\s*(.*?)\\s*(?:\\||\\n)([\\s\\S]*?)(?=TC\\d+|$)/gi;\n  let fallbackCases = [];\n  let m;\n  while ((m = regex.exec(testCasePart)) !== null) {\n    fallbackCases.push({\n      TestCaseID: m[1],\n      TestCaseName: m[2].trim(),\n      Steps: m[3].trim()\n    });\n  }\n\n  if (fallbackCases.length > 0) {\n    const headers = Object.keys(fallbackCases[0]);\n    const headerRow = `<tr>${headers.map(c => `<th>${c}</th>`).join(\"\")}</tr>`;\n    const bodyRows = fallbackCases.map(tc =>\n      `<tr>${headers.map(h => `<td>${tc[h] || \"\"}</td>`).join(\"\")}</tr>`\n    ).join(\"\\n\");\n\n    testCasesHtml = `\n      <h3><b>Test Cases</b></h3>\n      <table border=\"1\" cellpadding=\"6\" cellspacing=\"0\" \n             style=\"border-collapse: collapse; width: 100%; margin-top: 10px;\">\n        <thead>${headerRow}</thead>\n        <tbody>${bodyRows}</tbody>\n      </table>\n    `;\n  }\n}\n\n// ✅ Return JSON-safe strings\nreturn [\n  {\n    gherkinScenarios: JSON.stringify(gherkinPart),\n    testCasesTable: JSON.stringify(testCasesHtml || \"\")\n  }\n];\n"
+      },
+      "name": "Function Node Code (fixed)",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "721c6ad6-3712-47a7-9500-6f8e394ac33d"
+    },
+    {
+      "parameters": {
+        "operation": "compress",
+        "binaryPropertyName": "gherkinFile,testcaseFile",
+        "fileName": "scenarios_bundle.zip"
+      },
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        352
+      ],
+      "id": "2ab4d9c9-a5b1-48f7-a1c9-65019d6d621e",
+      "name": "Compression",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gherkin-expander-form/n8n-form",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        208
+      ],
+      "id": "e32bb5c5-cc54-4b88-a113-c6da22479cd3",
+      "name": "Webhook",
+      "webhookId": "c473558c-2ba4-48a5-9474-6c7b06325832"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If input Type": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Expander (Text)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spreadsheet File (Parse CSV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Expander (Text)": {
+      "main": [
+        [
+          {
+            "node": "Function Node Code (fixed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet File (Parse CSV)": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split in Batches": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Expander (CSV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Expander (CSV)": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Summary": {
+      "main": [
+        [
+          {
+            "node": "Compression",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Webhook (Text)": {
+      "main": [
+        []
+      ]
+    },
+    "Function Node Code (fixed)": {
+      "main": [
+        [
+          {
+            "node": "Respond Webhook (Text)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compression": {
+      "main": [
+        [
+          {
+            "node": "Respond Webhook (CSV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If input Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "885780ba-0ff2-4d84-86f3-388394d3c3aa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ea4a3d470821089b451bf62277f50191107d5708a1c4bf2435c804efa3844e75"
+  },
+  "id": "yt0fldXP0patUdBG",
+  "tags": []
+}
