@@ -41,3 +41,61 @@ The Docker image is built and published automatically to Docker Hub using GitHub
 
 ```bash
 docker pull dockerhead12/n8n-platform:latest
+### ▶️ Run the container
+
+Using Docker Compose (recommended for local development):
+
+```bash
+docker-compose up
+Or run it directly with Docker:
+docker run -p 3000:3000 dockerhead12/n8n-platform:latest
+Once the container starts, the service will be available at:👉 http://localhost:3000
+
+---
+
+## 🔄 CI/CD Pipeline – GitHub Actions
+
+This repository includes a CI/CD workflow defined in:
+
+Every time a new commit is pushed to the `main` branch:
+
+1. 🏗️ The Docker image is automatically built  
+2. 📤 The image is pushed to Docker Hub (`dockerhead12/n8n-platform:latest`)  
+3. ✅ A build and sanity check are run to verify the container
+
+This ensures the container is always up-to-date with the latest code changes without manual intervention.
+
+---
+
+## 📁 Repository Structure
+
+├── .github/workflows/docker-build.yml # GitHub Actions CI/CD workflow
+├── Dockerfile # Docker image build configuration
+├── docker-compose.yml # Docker Compose setup for local dev
+├── ScenarioCase Scribe.json # AI agent configuration (auto-used)
+├── README.md # Project documentation
+
+---
+
+## 📊 Example Use Cases
+
+- Transform business requirements into automation-ready Gherkin test scenarios  
+- Automatically generate regression, smoke, and sanity test suites  
+- Upload CSV-based requirements and instantly generate `.feature` + `.csv` artifacts  
+- Integrate with CI/CD pipelines to generate scenarios before automated test runs
+
+---
+
+## 🔮 Future Roadmap
+
+- 🧠 Add version tagging and automated release generation 
+- 📊 Integrate reporting for generated test cases 
+
+🧪 Summary
+
+ScenarioCase Scribe is your intelligent QA co-pilot — converting natural language requirements into ready-to-automate Gherkin scenarios and structured test cases.
+It drastically reduces manual effort, accelerates automation, and delivers test artifacts your team can use immediately — all from a single, containerized solution.
+
+📦 Docker Hub: dockerhead12/n8n-platform
+
+🧠 Maintainer: Amit Tupe
