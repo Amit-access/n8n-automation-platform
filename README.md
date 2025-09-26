@@ -68,7 +68,7 @@ This ensures the container is always up-to-date with the latest code changes wit
 ---
 
 ## 📁 Repository Structure
-
+.
 ├── .github/workflows/docker-build.yml # GitHub Actions CI/CD workflow
 ├── Dockerfile # Docker image build configuration
 ├── docker-compose.yml # Docker Compose setup for local dev
