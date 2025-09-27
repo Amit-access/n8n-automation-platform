@@ -44,7 +44,7 @@ The repository includes:
 ├── docker-compose.yml                     # Docker Compose setup for local dev
 ├── ScenarioCase Scribe.json               # AI agent configuration (auto-used)
 ├── public/
-│   └── Scenario-Scribe.html              # Frontend web UI
+│   └── Scenario-Scribe.html               # Frontend web UI
 ├── README.md                              # Project documentation
 ```
 
