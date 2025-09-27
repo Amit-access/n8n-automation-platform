@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ScenarioCase Scribe</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 40px;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      width: 900px;
+      max-width: 95%;
+      padding: 30px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+    h2 { margin-bottom: 6px; color: #1f2937; font-size: 26px; }
+    p.subtext { font-size: 14px; color: #4b5563; margin-bottom: 18px; }
+    label { display: block; text-align: left; margin: 12px 0 6px; font-weight: 600; color: #374151; }
+    select, textarea, input[type="file"], button {
+      width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    button {
+      margin-top: 18px; background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      color: white; border: none;
+      font-weight: 700; cursor: pointer; padding: 12px; border-radius: 8px;
+      transition: 0.3s ease-in-out;
+    }
+    button:hover { background: linear-gradient(90deg, #4f46e5, #7c3aed); }
+    .note { margin-top: 14px; font-size: 13px; color: #6b7280; text-align: left; }
+    #status {
+      margin-top: 18px; font-size: 14px; font-weight: 600; 
+      white-space: pre-wrap; text-align: left; 
+      padding: 12px; border-radius: 6px;
+      word-wrap: break-word; overflow-wrap: break-word;
+    }
+    #status.success { color: #166534; background: #dcfce7; border: 1px solid #16a34a; }
+    #status.error { color: #991b1b; background: #fee2e2; border: 1px solid #dc2626; }
+    .small { font-size: 12px; color: #6b7280; margin-top: 6px; text-align: left; }
+    #debug {
+      margin-top: 10px; text-align: left; font-size: 13px;
+      white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;
+    }
+    pre { white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word; }
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; }
+    table th { background: #f3f4f6; font-weight: 600; }
+    table td, table th { 
+      border: 1px solid #d1d5db; 
+      padding: 8px; 
+      font-size: 13px; 
+      text-align: left; 
+      vertical-align: top; 
+      word-wrap: break-word; 
+      white-space: normal; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ScenarioCase Scribe</h2>
+    <p class="subtext">Generate AI-powered Gherkin scenarios and structured test cases from text or CSV.</p>
+
+    <form id="scenarioForm" autocomplete="off">
+      <label for="mode">Mode</label>
+      <select id="mode" name="mode" required>
+        <option value="" disabled selected>Select mode...</option>
+        <option value="Text">Text</option>
+        <option value="CSV">CSV</option>
+      </select>
+
+      <label for="requirements">Requirement Text</label>
+      <textarea id="requirements" name="requirementText" placeholder="Enter requirements here if using Text Mode..."></textarea>
+
+      <label for="csvFile">CSV File</label>
+      <input type="file" id="csvFile" name="csvFile" accept=".csv" />
+
+      <button type="submit" id="submitBtn">🚀 Submit</button>
+    </form>
+
+    <div class="note">
+      👉 If you choose <b>Text Mode</b>, leave CSV blank.<br>
+      👉 If you choose <b>CSV Mode</b>, leave Requirement Text blank.
+    </div>
+
+    <div id="status" aria-live="polite"></div>
+    <div class="small" id="debug"></div>
+  </div>
+
+  <script>
+    (function () {
+      const FORM_URL = "http://localhost:3000/webhook/gherkin-expander-form/n8n-form";
+
+      const form = document.getElementById("scenarioForm");
+      const modeEl = document.getElementById("mode");
+      const reqEl = document.getElementById("requirements");
+      const fileEl = document.getElementById("csvFile");
+      const statusEl = document.getElementById("status");
+      const debugEl = document.getElementById("debug");
+      const submitBtn = document.getElementById("submitBtn");
+
+      function setStatus(text, cls) {
+        if (!text) {
+          statusEl.innerHTML = "";
+          return;
+        }
+        statusEl.className = "";
+        debugEl.textContent = "";
+        if (cls) statusEl.classList.add(cls);
+        statusEl.innerHTML = `<span>${text}</span>`;
+      }
+
+      function setDebug(text) {
+        debugEl.innerHTML = text;
+      }
+
+      modeEl.addEventListener("change", () => {
+        const mode = (modeEl.value || "");
+        submitBtn.textContent = mode === "CSV" ? "🚀 Generate Files" : "🚀 Submit Requirements";
+        if (mode === "Text") {
+          try { fileEl.value = ""; } catch(e) {}
+          fileEl.disabled = true;
+        } else {
+          fileEl.disabled = false;
+        }
+      });
+
+      function formDataSummary(fd) {
+        const out = [];
+        for (const [k, v] of fd.entries()) {
+          if (v instanceof File) {
+            out.push(`${k} => File(name="${v.name}", size=${v.size})`);
+          } else {
+            out.push(`${k} => "${v}"`);
+          }
+        }
+        return out.join("\n");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setStatus("Processing... please wait ⏳");
+
+        try {
+          const modeRaw = (modeEl.value || "").trim();
+          const requirementText = (reqEl.value || "").trim();
+
+          if (!modeRaw) {
+            setStatus("❌ Please choose a Mode (Text or CSV).", "error");
+            return;
+          }
+
+          if (modeRaw === "Text" && !requirementText) {
+            setStatus("❌ Requirement Text cannot be empty in Text Mode.", "error");
+            return;
+          }
+
+          if (modeRaw === "CSV" && (!fileEl.files || fileEl.files.length === 0)) {
+            setStatus("❌ Please upload a CSV file in CSV Mode.", "error");
+            return;
+          }
+
+          const fd = new FormData();
+          fd.set("mode", modeRaw);
+
+          if (modeRaw === "Text") {
+            fd.set("requirementText", requirementText);
+          }
+
+          if (modeRaw === "CSV") {
+            const f = fileEl.files[0];
+            fd.set("csvFile", f, f.name);
+          }
+
+          const res = await fetch(FORM_URL, { method: "POST", body: fd });
+
+          if (!res.ok) {
+            const bodyText = await res.text().catch(() => "");
+            throw new Error(`Server returned ${res.status} ${res.statusText}\n${bodyText}`);
+          }
+
+          const ct = (res.headers.get("content-type") || "").toLowerCase();
+
+          if (ct.includes("application/zip") || ct.includes("application/octet-stream")) {
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "scenarios_bundle.zip";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            setStatus("✅ Files generated and downloaded!", "success");
+          } else if (ct.includes("application/json")) {
+            const body = await res.json();
+            const gherkin = (body.gherkinScenarios || "").trim();
+            const table = (body.testCasesTable || "").trim();
+
+            if (!gherkin || gherkin.toLowerCase().includes("no input provided")) {
+              setStatus("⚠️ No usable input found. Please provide a valid requirement text or CSV file.", "error");
+              setDebug(`<pre>${gherkin || "It seems there was no input provided."}</pre>`);
+              return;
+            }
+
+            setStatus("✅ Gherkin and Test Cases generated below:", "success");
+            setDebug(
+              `<h3>Gherkin Scenarios</h3><pre>${gherkin}</pre>
+               <h3>Test Cases</h3>${table || "<div style='color:#6b7280'>No test cases found</div>"}`
+            );
+          } else {
+            const txt = await res.text();
+            if (!txt.trim()) {
+              setStatus("❌ Empty response received from server.", "error");
+              return;
+            }
+            setStatus("✅ Scenarios & Test Cases Generated:", "success");
+            setDebug(`<pre>${txt}</pre>`);
+          }
+
+        } catch (err) {
+          console.error(err);
+          setStatus("❌ Something went wrong. Check console for details.\n\n" + (err.message || ""), "error");
+          setDebug("FormData to be sent:\n" + formDataSummary(fd));
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
