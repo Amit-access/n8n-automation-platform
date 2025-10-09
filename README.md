@@ -6,23 +6,94 @@
 ScenarioCase Scribe is an **AI-powered test scenario generation platform** designed for QA automation teams.  
 It converts plain-text software requirements into **structured Gherkin scenarios** — including **positive, negative, edge, sanity, smoke, and regression cases** — and automatically generates **detailed test cases**.
 
-The tool can also process **CSV requirement uploads** to generate:
-- 📜 Gherkin scenarios downloadable as `.feature` files  
-- 🧪 Test cases downloadable as `.csv` files
+With one click, ScenarioCase Scribe can:
+
+- Convert natural-language requirements into structured BDD (Gherkin) scenarios
+
+- Generate detailed, automation-ready test cases with preconditions, steps, and expected results
+
+- Accept CSV uploads and generate downloadable .feature and .csv artifacts
+
+- Run as a containerized service — easy to integrate into CI/CD pipelines or automation frameworks
 
 ---
 
-## 🧠 Features
+⚙️ Quick Start (Local Development)
+
+1. Clone the repository
+
+git clone https://github.com/Amit-access/n8n-automation-platform.git
+cd n8n-automation-platform
+
+
+Create your environment file
+
+cp .env.example .env
+
+
+Then open .env and update the following:
+
+N8N_BASIC_AUTH_USER and N8N_BASIC_AUTH_PASSWORD
+
+OPENAI_API_KEY with your own key
+
+Adjust WEBHOOK_BASE_URL if deploying elsewhere
+
+Run using Docker Compose
+
+docker-compose up -d
+
+
+Access the UI
+
+🌐 Web App: https://scribe.qaiagentslab.cloud
+
+⚙️ n8n Editor: http://<your-server-ip>:5678
+
+Stop the services
+
+docker-compose down
+
+2. Try the Hosted Version (No Setup Needed)
+
+Visit the live platform: https://scribe.qaiagentslab.cloud
+
+- Paste plain-text requirements OR
+
+- Upload a .csv file with requirements
+
+- Download generated .feature (Gherkin Scenarios) and .csv (Test Cases)
+
+🔄 3. Automate in Your Pipeline
+
+Integrate it into your CI/CD workflows by running the container in your test stage:
+
+- name: Run ScenarioCase Scribe
+  run: docker run -p 3000:3000 dockerhead12/n8n-platform:latest
+  
+---
+
+🌐 Live Platform
+
+Try it now: https://scribe.qaiagentslab.cloud
+
+✅ Supports both Text Mode and CSV Mode
+✅ Generates downloadable .feature and .csv artifacts instantly
+
+---
+
+## Features
 
 - 🔁 Converts text requirements into **structured Gherkin scenarios**  
 - 📁 Upload CSV requirements and generate test cases in bulk  
 - 📥 Download generated **.feature** and **.csv** files for use in your automation framework  
-- 🤖 Built-in **ScenarioCase Agent** runs automatically inside the container — no manual setup required  
+- 🤖 Built-in **ScenarioCase Agent** runs automatically inside the container — no manual setup required
+- 🔐 Security-first design – isolated agent execution, sandboxed container, and no persistent data storage
 - 🐳 Fully containerized with automated CI/CD and Docker Hub deployment  
 
 ---
 
-## 🧰 Architecture Overview
+## Architecture Overview
 
 The platform is designed as a containerized microservice built with **Node.js and n8n**, with the AI-powered agent (`ScenarioCase Scribe.json`) automatically configured and executed at runtime.
 
@@ -128,6 +199,7 @@ We welcome contributions from the community! Here's how you can help:
 
 - 🔗 GitHub Repository: [ScenarioCase Scribe](https://github.com/Amit-access/n8n-automation-platform/)  
 - 🐳 Docker Hub: [dockerhead12/n8n-platform](https://hub.docker.com/u/dockerhead12)
+- 🌐 Live Demo: scribe.qaiagentslab.cloud
 
 ---
 
