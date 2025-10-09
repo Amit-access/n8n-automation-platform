@@ -18,20 +18,41 @@ With one click, ScenarioCase Scribe can:
 
 ---
 
-⚡️ Quick Start
+⚙️ Quick Start (Local Development)
 
-Get started with ScenarioCase Scribe in under 5 minutes:
+1. Clone the repository
 
-1. Run Locally with Docker
-# Clone the repo
 git clone https://github.com/Amit-access/n8n-automation-platform.git
 cd n8n-automation-platform
 
-# Start the container
+
+Create your environment file
+
+cp .env.example .env
+
+
+Then open .env and update the following:
+
+N8N_BASIC_AUTH_USER and N8N_BASIC_AUTH_PASSWORD
+
+OPENAI_API_KEY with your own key
+
+Adjust WEBHOOK_BASE_URL if deploying elsewhere
+
+Run using Docker Compose
+
 docker-compose up -d
 
 
-Access the web UI at 👉 http://localhost:3000
+Access the UI
+
+🌐 Web App: https://scribe.qaiagentslab.cloud
+
+⚙️ n8n Editor: http://<your-server-ip>:5678
+
+Stop the services
+
+docker-compose down
 
 2. Try the Hosted Version (No Setup Needed)
 
