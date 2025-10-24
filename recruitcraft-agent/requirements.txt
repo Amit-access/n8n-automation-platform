@@ -1,0 +1,10 @@
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.2
+python-dotenv==1.0.1
+
+# AI stack (we'll wire later)
+langchain==0.2.16
+langgraph==0.2.33
+langsmith==0.1.119
+chromadb==0.5.5

@@ -1,0 +1,63 @@
+{
+  "name": "Resume_Analyzer_v2_6",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Split JDs in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1
+    },
+    {
+      "id": "2",
+      "name": "RecruitCraft API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "parameters": {
+        "url": "http://localhost:8080/match",
+        "method": "POST",
+        "sendBody": true,
+        "jsonBody": "={{ $json }}",
+        "responseFormat": "json"
+      }
+    },
+    {
+      "id": "3",
+      "name": "Parse Agent JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1
+    },
+    {
+      "id": "4",
+      "name": "AI Agent (Per JD)",
+      "type": "n8n-nodes-base.code",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Split JDs in Batches": {
+      "main": [
+        [
+          {
+            "node": "RecruitCraft API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RecruitCraft API Call": {
+      "main": [
+        [
+          {
+            "node": "Parse Agent JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "version": 2
+}

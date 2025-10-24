@@ -19,3 +19,24 @@ services:
 
     volumes:
       - ./data:/home/node/.n8n
+
+  recruitcraft:
+    build:
+      context: ./recruitcraft-agent
+      dockerfile: Dockerfile
+    container_name: recruitcraft-agent
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LANGCHAIN_TRACING_V2=true
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LANGCHAIN_PROJECT=RecruitCraft
+    networks:
+      - recruit-net
+
+networks:
+  recruit-net:
+    driver: bridge
